@@ -42,9 +42,7 @@ function mergeMissingKeys(existingData, requiredData) {
 
 function collectInstallProvidedValues() {
   const providedValues = {};
-  const iosClientId = utilities.getPreferenceValue('IOS_CLIENT_ID');
-  const fallbackClientId = utilities.getPreferenceValue('CLIENT_ID');
-  const clientId = iosClientId || fallbackClientId;
+  const clientId = utilities.getPreferenceValue('CLIENT_ID');
   const reversedClientId = utilities.getPreferenceValue('REVERSED_CLIENT_ID');
   const iosBundleId = utilities.getPreferenceValue('IOS_BUNDLE_ID');
   const googleProjectId = utilities.getPreferenceValue('GOOGLE_PROJECT_ID');
@@ -119,13 +117,13 @@ module.exports = function(context) {
   const iosRootPlistPath = path.join(iosPlatformPath, 'GoogleService-Info.plist');
 
   const reversedClientId = utilities.getPreferenceValue('REVERSED_CLIENT_ID');
-  const clientId = utilities.getPreferenceValue('IOS_CLIENT_ID') || utilities.getPreferenceValue('CLIENT_ID');
+  const clientId = utilities.getPreferenceValue('CLIENT_ID');
   const strictValidation = isStrictValidationEnabled();
   console.log('[cordova-plugin-googleplus] IOS_STRICT_VALIDATION=' + (strictValidation ? 'true' : 'false'));
 
   if (!clientId) {
-    console.error('IOS_CLIENT_ID (or CLIENT_ID) plugin variable was not provided.');
-    deferral.reject('IOS_CLIENT_ID (or CLIENT_ID) plugin variable was not provided.');
+    console.error('CLIENT_ID plugin variable was not provided.');
+    deferral.reject('CLIENT_ID plugin variable was not provided.');
     return deferral.promise;
   }
 
@@ -136,7 +134,7 @@ module.exports = function(context) {
   }
 
   if (!validateClientId(clientId)) {
-    const message = 'IOS_CLIENT_ID has invalid format. Expected something like 123-abc.apps.googleusercontent.com';
+    const message = 'CLIENT_ID has invalid format. Expected something like 123-abc.apps.googleusercontent.com';
     if (strictValidation) {
       console.error(message);
       deferral.reject(message);

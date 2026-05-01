@@ -75,7 +75,7 @@ See [this screenshot for example](http://pix.toile-libre.org/upload/original/150
 ### iOS
 To get your iOS `REVERSED_CLIENT_ID`, [generate a configuration file here](https://developers.google.com/mobile/add?platform=ios&cntapi=signin).
 This `GoogleService-Info.plist` file contains both `REVERSED_CLIENT_ID` and `CLIENT_ID`.
-Pass those values as plugin variables during installation (`REVERSED_CLIENT_ID` and `IOS_CLIENT_ID`), and the plugin will generate `GoogleService-Info.plist` automatically. _These values are only needed for iOS._
+Pass those values as plugin variables during installation (`REVERSED_CLIENT_ID` and `CLIENT_ID`), and the plugin will generate `GoogleService-Info.plist` automatically. _These values are only needed for iOS._
 If `GoogleService-Info.plist` already exists, the plugin keeps existing values and only fills missing required keys.
 
 The `REVERSED_CLIENT_ID` is also known as the "iOS URL Scheme" on the Developer's Console.
@@ -118,13 +118,13 @@ Here's how it works (backup your project first!):
 
 Using the Cordova CLI and [npm](https://www.npmjs.com/package/cordova-plugin-googleplus):
 ```
-$ cordova plugin add cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable IOS_CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+$ cordova plugin add cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
 $ cordova prepare
 ```
 
 Using the Cordova CLI to fetch the latest version from GitHub:
 ```
-$ cordova plugin add https://github.com/EddyVerbruggen/cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable IOS_CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+$ cordova plugin add https://github.com/EddyVerbruggen/cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
 $ cordova prepare
 ```
 
@@ -152,7 +152,7 @@ IMPORTANT:
 
 * _Please note that `myreversedclientid` is a place holder for the reversed clientId you find in your iOS configuration file. Do not surround this value with quotes. **(iOS only Applications)**_
 * _`myiosclientid` is a place holder for the iOS OAuth client ID (`CLIENT_ID`) from your iOS configuration file. Do not surround this value with quotes._
-* _Expected formats: `IOS_CLIENT_ID` should look like `123-abc.apps.googleusercontent.com`, and `REVERSED_CLIENT_ID` should look like `com.googleusercontent.apps.123-abc`._
+* _Expected formats: `CLIENT_ID` should look like `123-abc.apps.googleusercontent.com`, and `REVERSED_CLIENT_ID` should look like `com.googleusercontent.apps.123-abc`._
 * _Default mode is soft (`IOS_STRICT_VALIDATION=false`): invalid formats produce warnings and build continues._
 * _Enable strict mode with `IOS_STRICT_VALIDATION=true` if you want format mismatches to fail prepare/build._
 
@@ -169,7 +169,7 @@ For the (stable) NPM Version:
 ```xml
 <plugin name="cordova-plugin-googleplus" source="npm">
   <variable name="REVERSED_CLIENT_ID" value="myreversedclientid" />
-  <variable name="IOS_CLIENT_ID" value="myiosclientid" />
+  <variable name="CLIENT_ID" value="myiosclientid" />
   <variable name="WEB_APPLICATION_CLIENT_ID" value="mywebapplicationclientid" />
 </plugin>
 ```
@@ -178,7 +178,7 @@ For the latest version from Git (not recommended):
 ```xml
 <plugin spec="https://github.com/EddyVerbruggen/cordova-plugin-googleplus.git" source="git">
   <variable name="REVERSED_CLIENT_ID" value="myreversedclientid" />
-  <variable name="IOS_CLIENT_ID" value="myiosclientid" />
+  <variable name="CLIENT_ID" value="myiosclientid" />
   <variable name="WEB_APPLICATION_CLIENT_ID" value="mywebapplicationclientid" />
 <plugin>
 ```
@@ -201,7 +201,7 @@ pod dependencies
 
 ### iOS migration notes
 - If you already have `GoogleService-Info.plist` in your iOS project, keep it. The plugin now supplements only missing required keys.
-- If the file is missing, the plugin creates it from `REVERSED_CLIENT_ID` and `IOS_CLIENT_ID` during `cordova prepare`.
+- If the file is missing, the plugin creates it from `REVERSED_CLIENT_ID` and `CLIENT_ID` during `cordova prepare`.
 - If a required variable has wrong format, build/prepare fails with a clear error message so the configuration can be fixed early.
 - Default behavior is legacy-friendly soft validation (warnings only).
 - Set `IOS_STRICT_VALIDATION=true` to enforce strict format validation.
