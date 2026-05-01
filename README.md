@@ -74,7 +74,9 @@ See [this screenshot for example](http://pix.toile-libre.org/upload/original/150
 
 ### iOS
 To get your iOS `REVERSED_CLIENT_ID`, [generate a configuration file here](https://developers.google.com/mobile/add?platform=ios&cntapi=signin).
-This `GoogleService-Info.plist` file contains the `REVERSED_CLIENT_ID` you'll need during installation. _This value is only needed for iOS._
+This `GoogleService-Info.plist` file contains both `REVERSED_CLIENT_ID` and `CLIENT_ID`.
+Pass those values as plugin variables during installation (`REVERSED_CLIENT_ID` and `IOS_CLIENT_ID`), and the plugin will generate `GoogleService-Info.plist` automatically. _These values are only needed for iOS._
+If `GoogleService-Info.plist` already exists, the plugin keeps existing values and only fills missing required keys.
 
 The `REVERSED_CLIENT_ID` is also known as the "iOS URL Scheme" on the Developer's Console.
 
@@ -116,19 +118,43 @@ Here's how it works (backup your project first!):
 
 Using the Cordova CLI and [npm](https://www.npmjs.com/package/cordova-plugin-googleplus):
 ```
-$ cordova plugin add cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+$ cordova plugin add cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable IOS_CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
 $ cordova prepare
 ```
 
 Using the Cordova CLI to fetch the latest version from GitHub:
 ```
-$ cordova plugin add https://github.com/EddyVerbruggen/cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid  --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+$ cordova plugin add https://github.com/EddyVerbruggen/cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable IOS_CLIENT_ID=myiosclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
 $ cordova prepare
+```
+
+EXTRA VARIABLES:
+
+If you need to install a specific version of `GoogleSignIn` library using pod you can pass it as a variable.
+This is optional, if this variable is not set the default version will be used.
+```
+--variable GOOGLE_SIGN_IN_VERSION="~> 6.2.3"
+```
+
+If you need to install a specific version of `GoogleUtilities` library using pod you can pass it as a variable.
+This is optional, if this variable is not set the default version will be used.
+```
+--variable GOOGLE_UTILITIES_VERSION="~> 7.4"
+```
+
+By default, the plugin uses soft validation mode (warnings only) for better legacy compatibility.
+If you want hard validation errors for format mismatches, enable strict format checks:
+```
+--variable IOS_STRICT_VALIDATION=true
 ```
 
 IMPORTANT:
 
 * _Please note that `myreversedclientid` is a place holder for the reversed clientId you find in your iOS configuration file. Do not surround this value with quotes. **(iOS only Applications)**_
+* _`myiosclientid` is a place holder for the iOS OAuth client ID (`CLIENT_ID`) from your iOS configuration file. Do not surround this value with quotes._
+* _Expected formats: `IOS_CLIENT_ID` should look like `123-abc.apps.googleusercontent.com`, and `REVERSED_CLIENT_ID` should look like `com.googleusercontent.apps.123-abc`._
+* _Default mode is soft (`IOS_STRICT_VALIDATION=false`): invalid formats produce warnings and build continues._
+* _Enable strict mode with `IOS_STRICT_VALIDATION=true` if you want format mismatches to fail prepare/build._
 
 * _If you are building a hybrid application **(iOS and Android)**, or an Android application, you have to replace `myreversedclientid` with the reverse value of Client ID in your **Release** credential generated on step 3, on [Google Developer's Console](https://console.developers.google.com/), this will be: **"com.googleusercontent.apps.`uniqueId`"**, without quotes. Example: '123-abc123.apps.googleusercontent.com' becomes 'com.googleusercontent.apps.123-abc123'._
 
@@ -143,6 +169,7 @@ For the (stable) NPM Version:
 ```xml
 <plugin name="cordova-plugin-googleplus" source="npm">
   <variable name="REVERSED_CLIENT_ID" value="myreversedclientid" />
+  <variable name="IOS_CLIENT_ID" value="myiosclientid" />
   <variable name="WEB_APPLICATION_CLIENT_ID" value="mywebapplicationclientid" />
 </plugin>
 ```
@@ -151,6 +178,7 @@ For the latest version from Git (not recommended):
 ```xml
 <plugin spec="https://github.com/EddyVerbruggen/cordova-plugin-googleplus.git" source="git">
   <variable name="REVERSED_CLIENT_ID" value="myreversedclientid" />
+  <variable name="IOS_CLIENT_ID" value="myiosclientid" />
   <variable name="WEB_APPLICATION_CLIENT_ID" value="mywebapplicationclientid" />
 <plugin>
 ```
@@ -171,6 +199,13 @@ cd platforms/ios/
 pod dependencies
 ```
 
+### iOS migration notes
+- If you already have `GoogleService-Info.plist` in your iOS project, keep it. The plugin now supplements only missing required keys.
+- If the file is missing, the plugin creates it from `REVERSED_CLIENT_ID` and `IOS_CLIENT_ID` during `cordova prepare`.
+- If a required variable has wrong format, build/prepare fails with a clear error message so the configuration can be fixed early.
+- Default behavior is legacy-friendly soft validation (warnings only).
+- Set `IOS_STRICT_VALIDATION=true` to enforce strict format validation.
+
 ## 7. Usage
 Check the [demo app](demo) to get you going quickly, or hurt yourself and follow these steps.
 
@@ -183,12 +218,9 @@ document.addEventListener('deviceready', deviceReady, false);
 function deviceReady() {
     //I get called when everything's ready for the plugin to be called!
     console.log('Device is ready!');
-    window.plugins.googleplus.trySilentLogin(...);
+    window.plugins.googleplus.login(...);
 }
 ```
-
-### isAvailable
-3/31/16: This method is no longer required to be checked first. It is kept for code orthoganality.
 
 ### Login
 
@@ -237,31 +269,6 @@ Additional user information is available by use case. Add the scopes needed to t
 On Android, the error callback (third argument) receives an error status code if authentication was not successful. A description of those status codes can be found on Google's android developer website at [GoogleSignInStatusCodes](https://developers.google.com/android/reference/com/google/android/gms/auth/api/signin/GoogleSignInStatusCodes).
 
 On iOS, the error callback will include an [NSError localizedDescription](https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSError_Class/).
-
-### Try silent login
-You can call `trySilentLogin` to check if they're already signed in to the app and sign them in silently if they are.
-
-If it succeeds you will get the same object as the `login` function gets,
-but if it fails it will not show the authentication dialog to the user.
-
-Calling `trySilentLogin` is done the same as `login`, except for the function name.
-```javascript
-window.plugins.googleplus.trySilentLogin(
-    {
-      'scopes': '... ', // optional - space-separated list of scopes, If not included or empty, defaults to `profile` and `email`.
-      'webClientId': 'client id of the web app/server side', // optional - clientId of your Web application from Credentials settings of your project - On Android, this MUST be included to get an idToken. On iOS, it is not required.
-      'offline': true, // Optional, but requires the webClientId - if set to true the plugin will also return a serverAuthCode, which can be used to grant offline access to a non-Google server
-    },
-    function (obj) {
-      alert(JSON.stringify(obj)); // do something useful instead of alerting
-    },
-    function (msg) {
-      alert('error: ' + msg);
-    }
-);
-```
-
-It is strongly recommended that trySilentLogin is implemented with the same options as login, to avoid any potential complications.
 
 ### logout
 This will clear the OAuth2 token.
