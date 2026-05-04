@@ -67,10 +67,10 @@
 
     <preference name="REVERSED_CLIENT_ID" />
     <preference name="CLIENT_ID" />
-    <preference name="IOS_GOOGLE_APP_ID" />
-    <preference name="IOS_BUNDLE_ID" />
-    <preference name="GOOGLE_PROJECT_ID" />
-    <preference name="GOOGLE_STORAGE_BUCKET" />
+    <preference name="IOS_GOOGLE_APP_ID" default="" />
+    <preference name="IOS_BUNDLE_ID" default="" />
+    <preference name="GOOGLE_PROJECT_ID" default="" />
+    <preference name="GOOGLE_STORAGE_BUCKET" default="" />
     <preference name="IOS_STRICT_VALIDATION" default="false" />
 
     <config-file target="*-Info.plist" parent="CFBundleURLTypes">
