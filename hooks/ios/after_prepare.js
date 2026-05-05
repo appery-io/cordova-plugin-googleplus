@@ -52,6 +52,31 @@ function updateClientKeys(existingData, clientId, reversedClientId) {
   };
 }
 
+function ensureUrlSchemeEntry(appInfoPlist, reversedClientId) {
+  const urlTypeName = 'REVERSED_CLIENT_ID';
+  const urlTypes = Array.isArray(appInfoPlist.CFBundleURLTypes) ? appInfoPlist.CFBundleURLTypes : [];
+  let targetEntry = null;
+
+  for (let i = 0; i < urlTypes.length; i += 1) {
+    if (urlTypes[i] && urlTypes[i].CFBundleURLName === urlTypeName) {
+      targetEntry = urlTypes[i];
+      break;
+    }
+  }
+
+  if (!targetEntry) {
+    targetEntry = {
+      CFBundleTypeRole: 'Editor',
+      CFBundleURLName: urlTypeName,
+      CFBundleURLSchemes: []
+    };
+    urlTypes.push(targetEntry);
+  }
+
+  targetEntry.CFBundleURLSchemes = [reversedClientId];
+  appInfoPlist.CFBundleURLTypes = urlTypes;
+}
+
 module.exports = function(context) {
   const deferral = q.defer();
   const projectRoot = context.opts.projectRoot;
@@ -131,11 +156,12 @@ module.exports = function(context) {
   }
 
   try {
-    log('Updating iOS Info.plist GIDClientID...');
+    log('Updating iOS Info.plist GIDClientID and URL scheme...');
     const appInfoPlist = plist.parse(fs.readFileSync(appInfoPlistPath, 'utf8'));
     appInfoPlist.GIDClientID = clientId;
+    ensureUrlSchemeEntry(appInfoPlist, reversedClientId);
     fs.writeFileSync(appInfoPlistPath, plist.build(appInfoPlist), 'utf8');
-    log('Successfully updated Info.plist with GIDClientID.');
+    log('Successfully updated Info.plist with GIDClientID and REVERSED_CLIENT_ID URL scheme.');
   } catch (error) {
     deferral.reject('Failed to update Info.plist: ' + error.message);
     return deferral.promise;
