@@ -65,6 +65,7 @@
     <header-file src="src/ios/GooglePlus.h"/>
     <source-file src="src/ios/GooglePlus.m"/>
 
+    <preference name="CLIENT_ID" />
     <preference name="REVERSED_CLIENT_ID" />
 
     <config-file target="*-Info.plist" parent="CFBundleURLTypes">

@@ -59,23 +59,22 @@ module.exports = function(context) {
   const appInfoPlistPath = utilities.getPlistPath(context);
   const iosProjectResourcesPath = path.join(path.dirname(appInfoPlistPath), 'Resources', 'GoogleService-Info.plist');
   const iosRootPlistPath = path.join(projectRoot, 'platforms', 'ios', 'GoogleService-Info.plist');
-  const clientId = utilities.getPreferenceValue('CLIENT_ID');
-  const reversedClientId = utilities.getPreferenceValue('REVERSED_CLIENT_ID');
+  const configuredClientId = utilities.getPreferenceValue('CLIENT_ID');
+  const configuredReversedClientId = utilities.getPreferenceValue('REVERSED_CLIENT_ID');
+  const resolvedIds = utilities.resolveClientIds(configuredClientId, configuredReversedClientId);
 
   log('Starting after_prepare hook.');
 
-  if (!clientId) {
-    deferral.reject('CLIENT_ID plugin variable was not provided.');
+  if (resolvedIds.error) {
+    deferral.reject(resolvedIds.error);
     return deferral.promise;
   }
 
-  if (!reversedClientId) {
-    deferral.reject('REVERSED_CLIENT_ID plugin variable was not provided.');
-    return deferral.promise;
-  }
+  const clientId = resolvedIds.clientId;
+  const reversedClientId = resolvedIds.reversedClientId;
 
-  log('CLIENT_ID received from plugin variables.');
-  log('REVERSED_CLIENT_ID received from plugin variables.');
+  log(configuredClientId ? 'CLIENT_ID received from plugin variables.' : 'CLIENT_ID generated from REVERSED_CLIENT_ID.');
+  log(configuredReversedClientId ? 'REVERSED_CLIENT_ID received from plugin variables.' : 'REVERSED_CLIENT_ID generated from CLIENT_ID.');
 
   try {
     let updatedPlistData;

@@ -75,6 +75,7 @@ See [this screenshot for example](http://pix.toile-libre.org/upload/original/150
 ### iOS
 To get your iOS `REVERSED_CLIENT_ID`, [generate a configuration file here](https://developers.google.com/mobile/add?platform=ios&cntapi=signin).
 This `GoogleService-Info.plist` file contains the `REVERSED_CLIENT_ID` you'll need during installation. _This value is only needed for iOS._
+You can pass either `REVERSED_CLIENT_ID` or `CLIENT_ID` during plugin installation; if one is missing, the plugin will derive it from the other.
 
 The `REVERSED_CLIENT_ID` is also known as the "iOS URL Scheme" on the Developer's Console.
 
@@ -117,12 +118,16 @@ Here's how it works (backup your project first!):
 Using the Cordova CLI and [npm](https://www.npmjs.com/package/cordova-plugin-googleplus):
 ```
 $ cordova plugin add cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+# or (equivalent for iOS):
+# --variable CLIENT_ID=myclientid.apps.googleusercontent.com
 $ cordova prepare
 ```
 
 Using the Cordova CLI to fetch the latest version from GitHub:
 ```
 $ cordova plugin add https://github.com/EddyVerbruggen/cordova-plugin-googleplus --save --variable REVERSED_CLIENT_ID=myreversedclientid  --variable WEB_APPLICATION_CLIENT_ID=mywebapplicationclientid
+# or (equivalent for iOS):
+# --variable CLIENT_ID=myclientid.apps.googleusercontent.com
 $ cordova prepare
 ```
 
