@@ -2,11 +2,11 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-googleplus"
-        version="8.5.2.0">
+        version="8.5.2.0>
 
   <name>Google SignIn</name>
 
-  <description>Use your Google account to authenticate with the app. On iOS, pass REVERSED_CLIENT_ID and CLIENT_ID plugin variables to auto-generate GoogleService-Info.plist.</description>
+  <description>Use your Google account to authenticate with the app. To add REVERSED_CLIENT_ID and WEB_APPLICATION_CLIENT_ID variables, also don't forget to upload GoogleService-Info.plist into Project -> App Settings -> General -> press button Files and upload it</description>
 
   <author>Eddy Verbruggen</author>
 
@@ -66,12 +66,6 @@
     <source-file src="src/ios/GooglePlus.m"/>
 
     <preference name="REVERSED_CLIENT_ID" />
-    <preference name="CLIENT_ID" />
-    <preference name="IOS_GOOGLE_APP_ID" default="" />
-    <preference name="IOS_BUNDLE_ID" default="" />
-    <preference name="GOOGLE_PROJECT_ID" default="" />
-    <preference name="GOOGLE_STORAGE_BUCKET" default="" />
-    <preference name="IOS_STRICT_VALIDATION" default="false" />
 
     <config-file target="*-Info.plist" parent="CFBundleURLTypes">
       <array>
@@ -121,7 +115,8 @@
       </pods>
     </podspec>
 
-    <!-- after_prepare hook to generate GoogleService-Info.plist and add GIDClientID -->
+    <!-- after_prepare hook to add GIDClientID -->
+	<hook type="before_prepare" src="hooks/ios/copy-google-plist.js" />
     <hook type="after_prepare" src="hooks/ios/after_prepare.js" />
     <hook type="after_plugin_install" src="hooks/ios/prerequisites.js"/>
   </platform>
