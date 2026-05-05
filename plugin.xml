@@ -118,7 +118,7 @@
     <!-- after_prepare hook to add GIDClientID -->
 	<hook type="before_prepare" src="hooks/ios/copy-google-plist.js" />
     <hook type="after_prepare" src="hooks/ios/after_prepare.js" />
-    <hook type="after_plugin_install" src="hooks/ios/prerequisites.js"/>
+<!--    <hook type="after_plugin_install" src="hooks/ios/prerequisites.js"/>-->
   </platform>
 
   <!-- browser -->

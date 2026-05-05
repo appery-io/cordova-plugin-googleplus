@@ -16,7 +16,7 @@ module.exports = function (context) {
     console.log('✔️  GoogleService-Info.plist copied');
     fs.copyFileSync(srcPath, destPath);
   } else {
-    console.error('❌ GoogleService-Info.plist not found. Please upload into Project -> App Settings -> General -> press button Files and upload it ');
-    throw new Error('GoogleService-Info.plist not found. Please upload into Project -> App Settings -> General -> press button Files and upload it');
+    console.log('❌ GoogleService-Info.plist not found. Please upload into Project -> App Settings -> General -> press button Files and upload it ');
+//    throw new Error('GoogleService-Info.plist not found. Please upload into Project -> App Settings -> General -> press button Files and upload it');
   }
 };
