@@ -22,15 +22,15 @@ function parsePlistSafe(filePath) {
 
 function buildMinimalPlistXml(clientId, reversedClientId) {
   return '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
-    '<plist version="1.0">\n' +
-    '<dict>\n' +
-    '    <key>CLIENT_ID</key>\n' +
-    '    <string>' + clientId + '</string>\n' +
-    '    <key>REVERSED_CLIENT_ID</key>\n' +
-    '    <string>' + reversedClientId + '</string>\n' +
-    '</dict> \n' +
-    '</plist>\n';
+      '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+      '<plist version="1.0">\n' +
+      '<dict>\n' +
+      '    <key>CLIENT_ID</key>\n' +
+      '    <string>' + clientId + '</string>\n' +
+      '    <key>REVERSED_CLIENT_ID</key>\n' +
+      '    <string>' + reversedClientId + '</string>\n' +
+      '</dict> \n' +
+      '</plist>\n';
 }
 
 function updateClientKeys(existingData, clientId, reversedClientId) {
@@ -50,6 +50,58 @@ function updateClientKeys(existingData, clientId, reversedClientId) {
     changedClientId: changedClientId,
     changedReversedClientId: changedReversedClientId
   };
+}
+
+function getGoogleServiceInfoSourcePaths(projectRoot) {
+  const candidates = [
+    path.join(projectRoot, 'src', 'assets', 'files', 'GoogleService-Info.plist'),
+    path.join(projectRoot, 'resources', 'GoogleService-Info.plist'),
+    path.join(projectRoot, 'GoogleService-Info.plist')
+  ];
+
+  const configPath = path.join(projectRoot, 'config.xml');
+  if (fs.existsSync(configPath)) {
+    const xml = fs.readFileSync(configPath, 'utf8');
+    const resourceFileRegex = /<resource-file\b([^>]*)\/?>/gi;
+    let match;
+
+    while ((match = resourceFileRegex.exec(xml)) !== null) {
+      const attrs = match[1];
+      const srcMatch = attrs.match(/\bsrc=["']([^"']+)["']/i);
+      const targetMatch = attrs.match(/\btarget=["']([^"']+)["']/i);
+
+      if (!srcMatch || !targetMatch || !targetMatch[1].includes('GoogleService-Info.plist')) {
+        continue;
+      }
+
+      candidates.unshift(path.resolve(projectRoot, srcMatch[1]));
+    }
+  }
+
+  return [...new Set(candidates)];
+}
+
+function loadBestGoogleServiceInfoData(projectRoot) {
+  const candidates = getGoogleServiceInfoSourcePaths(projectRoot);
+
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) {
+      continue;
+    }
+
+    const data = parsePlistSafe(candidate);
+    if (Object.prototype.hasOwnProperty.call(data, 'GOOGLE_APP_ID')) {
+      log('Using full Firebase plist as source: ' + candidate);
+      return data;
+    }
+
+    if (Object.keys(data).length > 0) {
+      log('Using existing plist as source: ' + candidate);
+      return data;
+    }
+  }
+
+  return null;
 }
 
 function ensureUrlSchemeEntry(appInfoPlist, reversedClientId) {
@@ -103,40 +155,33 @@ module.exports = function(context) {
 
   try {
     let updatedPlistData;
-    if (fs.existsSync(resourcesPlistPath)) {
-      log('Found existing file: ' + resourcesPlistPath);
-      const existingPlistData = parsePlistSafe(resourcesPlistPath);
-      const updateResult = updateClientKeys(existingPlistData, clientId, reversedClientId);
-      updatedPlistData = updateResult.data;
+    const existingPlistData = loadBestGoogleServiceInfoData(projectRoot) || parsePlistSafe(resourcesPlistPath);
+    const updateResult = updateClientKeys(existingPlistData, clientId, reversedClientId);
+    updatedPlistData = updateResult.data;
 
-      if (!updateResult.hadClientId) {
-        log('CLIENT_ID key is missing, adding it.');
-      } else if (updateResult.changedClientId) {
-        log('CLIENT_ID key exists, rewriting with new value.');
-      } else {
-        log('CLIENT_ID key is already up to date.');
-      }
-
-      if (!updateResult.hadReversedClientId) {
-        log('REVERSED_CLIENT_ID key is missing, adding it.');
-      } else if (updateResult.changedReversedClientId) {
-        log('REVERSED_CLIENT_ID key exists, rewriting with new value.');
-      } else {
-        log('REVERSED_CLIENT_ID key is already up to date.');
-      }
-
-      fs.writeFileSync(resourcesPlistPath, plist.build(updatedPlistData), 'utf8');
-      log('Updated existing resources plist: ' + resourcesPlistPath);
+    if (!updateResult.hadClientId) {
+      log('CLIENT_ID key is missing, adding it.');
+    } else if (updateResult.changedClientId) {
+      log('CLIENT_ID key exists, rewriting with new value.');
     } else {
-      log('File not found in resources, creating: ' + resourcesPlistPath);
-      fs.mkdirSync(path.dirname(resourcesPlistPath), { recursive: true });
-      fs.writeFileSync(resourcesPlistPath, buildMinimalPlistXml(clientId, reversedClientId), 'utf8');
-      updatedPlistData = {
-        CLIENT_ID: clientId,
-        REVERSED_CLIENT_ID: reversedClientId
-      };
-      log('Created resources plist with minimal XML format.');
+      log('CLIENT_ID key is already up to date.');
     }
+
+    if (!updateResult.hadReversedClientId) {
+      log('REVERSED_CLIENT_ID key is missing, adding it.');
+    } else if (updateResult.changedReversedClientId) {
+      log('REVERSED_CLIENT_ID key exists, rewriting with new value.');
+    } else {
+      log('REVERSED_CLIENT_ID key is already up to date.');
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(updatedPlistData, 'GOOGLE_APP_ID')) {
+      log('Warning: GOOGLE_APP_ID is missing. Firebase plugins require a full GoogleService-Info.plist from Firebase Console.');
+    }
+
+    fs.mkdirSync(path.dirname(resourcesPlistPath), { recursive: true });
+    fs.writeFileSync(resourcesPlistPath, plist.build(updatedPlistData), 'utf8');
+    log('Updated resources plist: ' + resourcesPlistPath);
 
     fs.mkdirSync(path.dirname(iosProjectResourcesPath), { recursive: true });
     fs.writeFileSync(iosProjectResourcesPath, plist.build(updatedPlistData), 'utf8');
