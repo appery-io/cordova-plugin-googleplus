@@ -33,6 +33,10 @@ Utilities.getPlistPath = function (context) {
   const common = context.requireCordovaModule('cordova-common');
   const util = context.requireCordovaModule('cordova-lib/src/cordova/util');
   const projectName = new common.ConfigParser(util.projectConfig(util.isCordova())).name();
+  const appPlistPath = './platforms/ios/App/App-Info.plist';
+  if (fs.existsSync(appPlistPath)) {
+    return appPlistPath;
+  }
   return './platforms/ios/' + projectName + '/' + projectName + '-Info.plist'
 }
 
